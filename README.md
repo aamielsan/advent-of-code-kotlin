@@ -1,1 +1,1 @@
-# advent-of-code-kotlin-2023
+# advent-of-code-kotlin
