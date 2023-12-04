@@ -50,7 +50,7 @@ fun main() {
 
 private fun String.isNumeric() = isNotEmpty() && all(Char::isDigit)
 
-data class Schematic(
+private data class Schematic(
     private val _partNumbers: MutableList<PartNumber> = mutableListOf(),
     private val _symbols: MutableList<Symbol> = mutableListOf()
 ) {
@@ -59,21 +59,18 @@ data class Schematic(
             abs(x - another.x) <= 1 && abs(y - another.y) <= 1
     }
 
-    sealed interface Components<V> {
-        val value: V
-    }
     data class PartNumber(
-        override val value: Int,
+        val value: Int,
         val points: List<Point>
-    ) : Components<Int> {
+    ) {
         infix fun isAdjacentTo(symbol: Symbol): Boolean = points.any { it isAdjacentTo symbol.point }
         infix fun isAdjacentToAnyOf(symbols: List<Symbol>): Boolean = symbols.any { this isAdjacentTo it }
     }
 
     data class Symbol(
-        override val value: String,
+        val value: String,
         val point: Point,
-    ) : Components<String>
+    )
 
     companion object
 
@@ -90,7 +87,7 @@ data class Schematic(
 
 private val regex: Regex = """\d+|[^0-9.]+|\.+""".toRegex()
 
-fun Schematic.Companion.from(input: List<String>): Schematic =
+private fun Schematic.Companion.from(input: List<String>): Schematic =
     Schematic().also { schematic ->
         input
             .forEachIndexed { yIndex, line ->
