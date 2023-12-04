@@ -18,11 +18,11 @@ fun main() {
 
     val input: List<String> = inputAsLines("Day02")
 
-    assert(part1(test) == 8)
-    println(part1(input))
+    check(part1(test) == 8)
+    part1(input).println()
 
-    assert(part2(test) == 2286)
-    println(part2(input))
+    check(part2(test) == 2286)
+    part2(input).println()
 }
 
 private data class Game(

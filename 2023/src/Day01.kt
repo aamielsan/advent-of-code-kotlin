@@ -32,6 +32,6 @@ fun main() {
 
     val input = inputAsLines("Day01")
 
-    println(part1(input))
-    println(part2(input))
+    part1(input).println()
+    part2(input).println()
 }
