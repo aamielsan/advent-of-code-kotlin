@@ -37,14 +37,14 @@ fun main() {
     part2(input).println()
 }
 
-data class ScratchCard(
+private data class ScratchCard(
     val winningNumbers: Set<Int>,
     val scratchedNumbers: Set<Int>,
 ) {
     companion object
 }
 
-fun ScratchCard.Companion.from(input: String): ScratchCard =
+private fun ScratchCard.Companion.from(input: String): ScratchCard =
     input
         .split(": ")
         .last()
@@ -57,7 +57,7 @@ fun ScratchCard.Companion.from(input: String): ScratchCard =
             )
         }
 
-fun ScratchCard.countWinningNumbers() = (scratchedNumbers intersect winningNumbers).size
+private fun ScratchCard.countWinningNumbers() = (scratchedNumbers intersect winningNumbers).size
 
-fun ScratchCard.points(): Int =
-    countWinningNumbers().let { if (it == 0) 0 else 2.0.pow(it - 1).toInt() }
+private fun ScratchCard.points(): Int =
+    countWinningNumbers().let { count -> if (count == 0) 0 else 2.0.pow(count - 1).toInt() }
