@@ -29,8 +29,8 @@ fun main() {
 }
 
 private fun numberOfWaysToWin(time: Double, distance: Double): Int {
-    val quadratic = sqrt((time * time) - (4 * distance + 1))
-    val firstRoot = ((time + quadratic) / 2)
-    val secondRoot = ((time - quadratic) / 2)
+    val quadratic = sqrt((time * time) - (4 * distance + 1)) // being tied to the record distance is not a win, hence the + 1
+    val firstRoot = (time + quadratic) / 2
+    val secondRoot = (time - quadratic) / 2
     return abs(firstRoot.toInt() - secondRoot.toInt())
 }
