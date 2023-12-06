@@ -1,3 +1,8 @@
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlin.time.measureTime
+
 fun main() {
     val test: String = """
         seeds: 79 14 55 13
@@ -36,72 +41,85 @@ fun main() {
     """.trimIndent()
 
     fun part1(input: String): Long {
-        val raw = input.split("\n\n").map(String::lines)
-        val seeds: List<Long> = raw[0][0].split(": ").last().split(" ").map(String::toLong)
-        val transformers = raw.drop(1).map(Mapping::of)
-
-        return seeds
-            .map { seed ->
-                transformers.fold(seed) { acc, mapping ->
-                    val values = mapping.mapNotNull { it.value(acc) }
-                    when {
-                        values.isEmpty() -> acc
-                        else -> values.first() // there doesn't seem to be overlapping ranges
-                    }
-                }
-            }
-            .min()
+        val seeds: List<Long> = seed(input)
+        val almanac = Almanac(
+            mappings = mappings(input)
+        )
+        return seeds.minOf { almanac locationOf it }
     }
 
-    fun part2(input: String): Long {
-        val raw = input.split("\n\n").map(String::lines)
-        val seedRanges: List<List<Long>> = raw[0][0].split(": ").last().split(" ").map(String::toLong).chunked(2)
-        val transformers = raw.drop(1).map(Mapping::of)
+    fun part2(input: String): Long = runBlocking {
+        val almanac = Almanac(
+            mappings = mappings(input)
+        )
 
-        val locations = seedRanges
-            .flatMap { (seed, range) -> List(range.toInt()) { seed + it.toLong() } }
-            .map { seed ->
-                transformers.fold(seed) { acc, mapping ->
-                    val values = mapping.mapNotNull { it.value(acc) }
-                    when {
-                        values.isEmpty() -> acc
-                        else -> values.first() // there doesn't seem to be overlapping ranges
-                    }
+        seed(input)
+            .chunked(2)
+            .sortedBy { it.first() }
+            .map { (seed, range) -> seed until seed + range }
+            .map { seedRange ->
+                async {
+                    seedRange.minOf { seed -> almanac locationOf seed }
                 }
             }
-
-        return locations.min()
+            .awaitAll()
+            .min()
     }
 
     val input: String = inputAsText("Day05")
 
     check(part1(test).println() == 35.toLong())
-    check(part1(input).println() == 993500720.toLong())
-    check(part2(test).println() == 47.toLong())
-    part2(input).println()
+    part1(input).println()
+    measureTime {
+        check(part2(test).println() == 46.toLong())
+    }.println()
+    measureTime {
+        part2(input).println()
+    }.println()
 }
 
-private data class Mapping(
-    private val source: Long,
-    private val destination: Long,
-    private val range: Long,
-) {
-    companion object {
-        fun of(rawMapping: List<String>): List<Mapping> =
-            rawMapping
+private fun seed(input: String): List<Long> =
+    input
+        .split("\n\n")
+        .first()
+        .split(": ")
+        .last()
+        .split(" ")
+        .map(String::toLong)
+
+private fun mappings(input: String): List<List<Almanac.Mapping>> =
+    input
+        .split("\n\n")
+        .drop(1)
+        .map(String::lines)
+        .map { rawMappings ->
+            rawMappings
                 .drop(1)
                 .map { line ->
                     line
                         .split(" ")
                         .map(String::toLong)
-                        .let { (dest, source, range) -> Mapping(source, dest, range) }
+                        .let { (dest, source, range) -> Almanac.Mapping(source, dest, range) }
                 }
-    }
-
-    fun value(key: Long): Long? =
-        when (key) {
-            in source..source + range -> destination + (key - source)
-            else -> null
         }
-}
 
+private class Almanac(
+    private val mappings: List<List<Mapping>>
+) {
+    infix fun locationOf(seed: Long): Long =
+        mappings.fold(seed) { acc, mapping ->
+            mapping.firstNotNullOfOrNull { it.valueOf(acc) } ?: acc
+        }
+
+    data class Mapping(
+        private val source: Long,
+        private val destination: Long,
+        private val range: Long,
+    ) {
+        fun valueOf(key: Long): Long? =
+            when (key) {
+                in source .. source + range -> destination + (key - source)
+                else -> null
+            }
+    }
+}
